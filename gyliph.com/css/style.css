@@ -1,0 +1,42 @@
+.header{
+	color: rgb(100, 50, 50);
+	font-weight: bold;
+	position: relative;
+	text-shadow: 0 0 2px rgb(0, 0, 0);
+}
+
+.jumbotron-fluid{
+	background-color: rgb(225, 225, 225);
+	height: 10%;
+}
+
+.app-icon{
+	background-color:  rgb(225, 225, 225);
+	border-radius: 5px;
+	height: 150px;
+	margin: 0 auto;
+	margin-bottom: 10px;
+	text-align: center;
+	width: 100%;
+}
+
+.app-icon:hover {
+	background-color: rgb(175, 225, 175);
+	cursor: pointer;
+}
+
+.app-icon img{
+	height: 100px;
+	position: relative;
+	top: 25px;
+	width: 100px;
+}
+
+.container{
+	position: relative;
+	top: 50px;
+}
+
+body{
+	background-color: rgb(50, 50, 50)
+}

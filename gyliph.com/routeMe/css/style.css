@@ -1,0 +1,55 @@
+.header{
+	color: rgb(100, 50, 50);
+	font-weight: bold;
+	position: relative;
+	text-shadow: 0 0 2px rgb(0, 0, 0);
+}
+
+.jumbotron-fluid{
+	background-color: rgb(225, 225, 225);
+	height: 10%;
+}
+
+.container{
+	margin-top: 2%;
+	position: relative;
+	text-align: center;
+}
+
+.map{
+	height: 80vh;
+	position: relative;
+}
+
+.routeButton{
+	margin-top: 10px;
+	margin-bottom: 2%;
+	position: relative;
+}
+
+.hidden{
+	display: none;
+}
+
+.loader{
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	margin-top: -50px;
+	margin-left: -50px;
+	height: 100px;
+	width: 100px;
+	border: 12px solid rgb(50, 50, 50);
+	border-top: 12px solid rgb(50, 250, 50);
+	border-radius: 50%;
+	animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+body{
+	background-color: rgb(50, 50, 50)
+}
