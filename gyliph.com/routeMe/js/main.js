@@ -280,7 +280,12 @@ define([
               attr["start_lnglat"] = segment.start_latlng.reverse();
               attr["end_lnglat"] = segment.end_latlng.reverse();
               attr["visited"] = 0;
-              var lineGraphic = this.makeLine(this.polyConverter.decodePoly(segment.points));
+              var lineSymbol = new SimpleLineSymbol(
+                SimpleLineSymbol.STYLE_SOLID,
+                new Color([125, 250, 125, 0.75]),
+                4
+              );
+              var lineGraphic = this.polyConverter.decodePoly_toGraphic(segment.points, lineSymbol);
               lineGraphic.setAttributes(attr);
               this.addFeatures.push(lineGraphic);
             }));
@@ -388,7 +393,7 @@ define([
       //Do stuff
 
       domClass.add(this.loader, "hidden");
-    }
+    },
 
     routeMe: function() {
       domClass.remove(this.loader, "hidden");
@@ -446,17 +451,6 @@ define([
         this.graphic.setGeometry(pt);
       }
       this.map.centerAt(pt);
-    },
-
-    makeLine: function(ln) {
-      var line = new Polyline(ln);
-      var lineSymbol = new SimpleLineSymbol(
-        SimpleLineSymbol.STYLE_SOLID,
-        new Color([125, 250, 125, 0.75]),
-        4
-      );
-      var lineGraphic = new Graphic(line, lineSymbol);
-      return lineGraphic;
     },
 
     addGraphic: function(pt) {

@@ -1,3 +1,5 @@
+/*AUTHOR: Jeff King*/
+
 define([
   "dojo/_base/declare",
   "dojo/_base/kernel",
@@ -5,9 +7,13 @@ define([
   "dojo/io-query",
   "esri/config",
   "esri/geometry/webMercatorUtils",
+  "esri/geometry/Polyline",
+  "esri/symbols/SimpleLineSymbol",
+  "esri/graphic",
   "dojo/domReady!"
 ], function(
-  declare, kernel, lang, ioQuery, esriConfig, webMercatorUtils) {
+  declare, kernel, lang, ioQuery, esriConfig, webMercatorUtils, Polyline,
+  SimpleLineSymbol, Graphic) {
   return declare([], {
     config: null,
 
@@ -77,6 +83,12 @@ define([
       }
 
       return codeChunks;
+    },
+
+    decodePoly_toGraphic: function(encodedString, lineSymbol) {
+      var line = new Polyline(this.decodePoly(encodedString));
+      var lineGraphic = new Graphic(line, lineSymbol);
+      return lineGraphic;
     }
   });
 });
