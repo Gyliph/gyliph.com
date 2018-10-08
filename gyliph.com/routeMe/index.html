@@ -14,14 +14,20 @@
 </head>
 <body>
   <div class="jumbotron-fluid text-center">
-    <h1 class="header">Route Me</h1>
+    <h1 class="header">
+      Route Me
+      <div class="status hidden">
+        <h class="userText"></h>
+        <button type="button" class="btn btn-primary logInButton">log in</button>
+      </div>
+    </h1>
   </div>
 
   <div class="container">
     <div id="map"></div>
     <button type="button" class="btn btn-primary routeButton hidden"
     data-toggle="popover" title="Route Error" data-placement="top" data-trigger="manual"
-    data-content="Could not route from current extent, try a different one">
+    data-content="">
       route based on current view
     </button>
   </div>

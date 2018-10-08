@@ -23,6 +23,8 @@ define([
   "esri/units",
   "esri/tasks/FeatureSet",
   "esri/arcgis/Portal",
+  "esri/arcgis/OAuthInfo",
+  "esri/IdentityManager",
   "dijit/registry",
   "dojo/query",
   "esri/IdentityManager",
@@ -35,8 +37,8 @@ define([
   declare, kernel, lang, ioQuery, esriConfig, Map, Point, Polyline, SimpleMarkerSymbol,
   SimpleLineSymbol, Graphic, Color, webMercatorUtils, esriRequest, PopupTemplate,
   FeatureLayer, LabelClass, TextSymbol, Font, RouteParameters, RouteTask, Units,
-  FeatureSet, arcgisPortal, registry, query, esriId, googlePolyConverter, on, domClass,
-  Deferred) {
+  FeatureSet, arcgisPortal, OAuthInfo, esriId, registry, query, esriId,
+  googlePolyConverter, on, domClass, Deferred) {
   return declare([], {
     map: null,
     watchId: 0,
@@ -49,6 +51,9 @@ define([
 
     loader: null,
     routeButton: null,
+    logInButton: null,
+
+    headerStatus: null,
 
     graphicsToAdd: [],
     lastVisited_index: 0,
@@ -110,7 +115,11 @@ define([
     addFeatures: [],
     deleteFeatures: [],
 
+    oAuthInfo: null,
+    loggedIn: null,
+
     startup: function(config) {
+      module = this;
       this.config = config;
 
       esriConfig.defaults.io.corsEnabledServers.push({
@@ -124,6 +133,12 @@ define([
       var query = uri.substring(uri.indexOf("?") + 1, uri.length);
       var queryObject = ioQuery.queryToObject(query);
       if(queryObject.code) {
+        oAuthInfo = new OAuthInfo({
+          appId: "0FsqwlK8l8eLOwir",
+          popup: true
+        });
+        esriId.registerOAuthInfos([oAuthInfo]);
+
         var tokenRequest = esriRequest({
           url: "https://" + this.config.stravaDomain + "/oauth/token",
           content: {
@@ -224,11 +239,57 @@ define([
     initButton: function() {
       domClass.remove(this.routeButton, "hidden");
       on(this.routeButton, "click", lang.hitch(this, function() {
+        if(!this.loggedIn) {
+          clearTimeout(this.popoverTimeout);
+          $('[data-toggle="popover"]').attr('data-content', this.config.logInError)
+          $('[data-toggle="popover"]').popover("show");
+          domClass.add(this.loader, "hidden");
+          this.popoverTimeout = setTimeout(function() {
+            $('[data-toggle="popover"]').popover("hide");
+          }, 5000);
+          return;
+        }
+
         if(this.segmentsLoaded) {
           $('[data-toggle="popover"]').popover("hide");
           this.routeMe();
         }
       }));
+
+      esriId.checkSignInStatus(oAuthInfo.portalUrl).then(lang.hitch(this, function(credential) {
+        this.logIn(credential);
+        domClass.remove(this.headerStatus, "hidden");
+      }), lang.hitch(this, function(error) {
+        this.logOut();
+        domClass.remove(this.headerStatus, "hidden");
+      }));
+      on(this.logInButton, "click", lang.hitch(this, function() {
+        esriId.getCredential(oAuthInfo.portalUrl + "/sharing", {
+          oAuthPopupConfirmation: false
+        }).then(lang.hitch(this, function(credential) {
+          if(!this.loggedIn) {
+            this.logIn(credential);
+          }else if(this.loggedIn) {
+            this.logOut(credential);
+          }
+        }));
+      }));
+    },
+
+    logIn(credential) {
+      var loText = "log out"
+      this.loggedIn = true;
+      this.logInButton.innerHTML = loText;
+      this.userText.innerHTML = credential.userId;
+    },
+    logOut(credential) {
+      var liText = "log in"
+      this.loggedIn = false;
+      this.logInButton.innerHTML = liText;
+      this.userText.innerHTML = "";
+      if(credential) {
+        credential.destroy();
+      }
     },
 
     createMap: function(location) {
@@ -242,6 +303,9 @@ define([
       this.map.on("load", lang.hitch(this, function() {
         this.loader = query(".loader")[0];
         this.routeButton = query(".routeButton")[0];
+        this.logInButton = query(".logInButton")[0];
+        this.headerStatus = query(".header .status")[0];
+        this.userText = query(".status .userText")[0];
         this.initButton();
         this.initLayer();
         this.addGraphic(pt);
@@ -299,94 +363,6 @@ define([
       }));
     },
 
-    /*throughStartEnd(index, startGraphic, start_end, dist, nextGraphic, lineGraphic_index, callback) {
-      if(index < 2) {
-        var se = start_end[index];
-        this.routeParams.stops.features = [];
-        this.routeParams.stops.features.push(startGraphic);
-        this.routeParams.stops.features.push(se);
-        this.routeTask.solve(this.routeParams, lang.hitch(this, function(success) {
-          var rtg = success.routeResults[0].route;
-          if((rtg.attributes.Total_Miles < dist) || (dist === -1)) {
-            if(dist !== -1) {
-              this.graphicsToAdd.pop();
-              this.featureLayer.graphics[this.lastVisited_index].attr("visited", 0);
-            }
-            dist = rtg.attributes.Total_Miles;
-            nextGraphic = start_end[2 % (index+1)];
-            rtg.symbol = new SimpleLineSymbol(
-              SimpleLineSymbol.STYLE_SOLID,
-              new Color([200, 50, 50, 0.5]),
-              6
-            );
-            this.graphicsToAdd.push(rtg);
-            this.featureLayer.graphics[lineGraphic_index].attr("visited", 1);
-            this.lastVisited_index = lineGraphic_index;
-          }
-          this.throughStartEnd(index+1, startGraphic, start_end, dist, nextGraphic, lineGraphic_index, callback);
-        }), lang.hitch(this, function(error) {
-          callback(null)
-        }));
-      }else {
-        callback([dist, nextGraphic]);
-      }
-    },
-
-    throughLayers(index, dist, nextGraphic, startGraphic) {
-      lineGraphic = this.featureLayer.graphics[index];
-      if(startGraphic === null && nextGraphic === null) {
-        startGraphic = new Graphic(new Point(
-          lineGraphic.attributes.end_lnglat[0],
-          lineGraphic.attributes.end_lnglat[1]
-        ));
-        this.featureLayer.graphics[index].attr("visited", 1);
-        this.throughLayers(index+1, dist, nextGraphic, startGraphic);
-      }else if(index < this.featureLayer.graphics.length) {
-        if(lineGraphic.attributes["visited"] === 0) {
-          var start_end = [];
-          start_end.push(new Graphic(new Point(
-            lineGraphic.attributes.start_lnglat[0],
-            lineGraphic.attributes.start_lnglat[1]
-          )));
-          start_end.push(new Graphic(new Point(
-            lineGraphic.attributes.end_lnglat[0],
-            lineGraphic.attributes.end_lnglat[1]
-          )));
-
-          this.throughStartEnd(0, startGraphic, start_end, dist, nextGraphic, index,
-            lang.hitch(this, function(tseReturn) {
-              if(tseReturn) {
-                dist = tseReturn[0]; nextGraphic = tseReturn[1];
-                this.throughLayers(index+1, dist, nextGraphic, startGraphic);
-              }
-          }));
-        }else { console.log("VISITED!"); this.throughLayers(index+1, dist, nextGraphic, startGraphic); }
-      }else {
-        startGraphic = nextGraphic;
-        this.throughLayers(0, -1, nextGraphic, startGraphic);
-      }
-
-    },
-
-    routeMe2: function() {
-      this.routeParams = new RouteParameters();
-      this.routeParams.stops = new FeatureSet();
-      this.routeParams.returnRoutes = true;
-      this.routeParams.returnDirections = false;
-      this.routeParams.directionsLengthUnits = Units.MILES;
-      this.routeParams.outSpatialReference = this.map.spatialReference;
-      this.routeTask = new RouteTask(this.config.routeService);
-      this.map.graphics.clear();
-      this.graphicsToAdd = [];
-      this.lastVisited_index = 0;
-      if(this.throughLayers(0, -1, null, null)) {
-        console.log("route success!!!");
-        console.log(this.graphicsToAdd);
-      }else {
-        console.log("route error!!!");
-      }
-    },*/
-
     routeMe_OG: function() {
       domClass.remove(this.loader, "hidden");
 
@@ -435,6 +411,7 @@ define([
         domClass.add(this.loader, "hidden");
       }), lang.hitch(this, function(error) {
         clearTimeout(this.popoverTimeout);
+        $('[data-toggle="popover"]').attr('data-content', this.config.routeError)
         $('[data-toggle="popover"]').popover("show");
         domClass.add(this.loader, "hidden");
         this.popoverTimeout = setTimeout(function() {

@@ -27,6 +27,20 @@
 	position: relative;
 }
 
+.header .status{
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	font-size: 16px;
+	text-shadow: none;
+	color: rgb(0, 0, 0);
+	word-spacing: 10px;
+}
+
+.logInButton{
+	position: relative;
+}
+
 .hidden{
 	display: none;
 }
