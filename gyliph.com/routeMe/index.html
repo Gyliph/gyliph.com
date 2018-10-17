@@ -24,11 +24,16 @@
   </div>
 
   <div class="container">
-    <div id="map"></div>
+    <div id="map">
+      <img src="images/locate_icon.png" class="locate hidden" alt="Locate">
+    </div>
     <button type="button" class="btn btn-primary routeButton hidden"
     data-toggle="popover" title="Route Error" data-placement="top" data-trigger="manual"
     data-content="">
-      route based on current view
+      route based on segments in view
+    </button>
+    <button type="button" class="btn btn-primary selectButton hidden">
+      add segments to route
     </button>
   </div>
 

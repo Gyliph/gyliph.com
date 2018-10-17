@@ -7,5 +7,9 @@ define({
   "routeService": "https://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World",
 
   "routeError": "Could not route from current extent, try a different one",
-  "logInError": "You are not logged in, please log in"
+  "routeErrorSelect": "Could not route from current selection, try a different one",
+  "logInError": "You are not logged in, please log in",
+
+  "routeNoSelect": "route based on segments in view",
+  "routeSelect": "route based on selected segments"
 })

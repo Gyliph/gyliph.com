@@ -20,6 +20,7 @@ define([
   "esri/symbols/Font",
   "esri/tasks/RouteParameters",
   "esri/tasks/RouteTask",
+  "esri/tasks/query",
   "esri/units",
   "esri/tasks/FeatureSet",
   "esri/arcgis/Portal",
@@ -36,7 +37,7 @@ define([
 ], function(
   declare, kernel, lang, ioQuery, esriConfig, Map, Point, Polyline, SimpleMarkerSymbol,
   SimpleLineSymbol, Graphic, Color, webMercatorUtils, esriRequest, PopupTemplate,
-  FeatureLayer, LabelClass, TextSymbol, Font, RouteParameters, RouteTask, Units,
+  FeatureLayer, LabelClass, TextSymbol, Font, RouteParameters, RouteTask, Query, Units,
   FeatureSet, arcgisPortal, OAuthInfo, esriId, registry, query, esriId,
   googlePolyConverter, on, domClass, Deferred) {
   return declare([], {
@@ -52,6 +53,10 @@ define([
     loader: null,
     routeButton: null,
     logInButton: null,
+    locateButton: null,
+    selectButton: null,
+
+    currentLocation: null,
 
     headerStatus: null,
 
@@ -62,6 +67,8 @@ define([
 
     routeParams: null,
     routeTask: null,
+
+    selecting: false,
 
     featureCollection: {
       "layerDefinition": {
@@ -112,8 +119,12 @@ define([
     },
     popupTemplate: null,
     featureLayer: null,
+    selectedFeatures: [],
     addFeatures: [],
     deleteFeatures: [],
+
+    selectionSymbol: null,
+    segmentSymbol: null,
 
     oAuthInfo: null,
     loggedIn: null,
@@ -171,13 +182,14 @@ define([
       this.accessToken = accessToken;
       if(navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(lang.hitch(this, this.createMap), lang.hitch(this, this.locationError));
-        watchId = navigator.geolocation.watchPosition(lang.hitch(this, this.showLocation), lang.hitch(this, this.locationError));
+        this.watchId = navigator.geolocation.watchPosition(lang.hitch(this, this.updateLocation), lang.hitch(this, this.locationError));
       }else {
         alert("Browser doesn't support Geolocation. Visit http://caniuse.com to see browser support for the Geolocation API.");
       }
     },
 
     initLayer: function() {
+      this.setSymbols();
       this.popupTemplate = new PopupTemplate({
         title: "{"+this.config.labelField+"}",
         fieldInfos: [
@@ -195,9 +207,13 @@ define([
         id: "segmentLayer",
         infoTemplate: this.popupTemplate
       });
-      this.featureLayer.on("click", function(evt) {
+      this.featureLayer.on("click", lang.hitch(this, function(evt) {
         this.map.infoWindow.setFeatures([evt.graphic]);
-      });
+        if(this.selecting) {
+          this.selectedFeatures.push(evt.graphic)
+          evt.graphic.setSymbol(this.selectionSymbol);
+        }
+      }));
 
       this.featureLayer.showLabels = true;
       var layerLabel = new TextSymbol().setColor(new Color([0, 0, 0, 1.0]));
@@ -216,9 +232,22 @@ define([
       this.map.addLayers([this.featureLayer]);
     },
 
+    setSymbols: function() {
+      this.segmentSymbol = new SimpleLineSymbol(
+        SimpleLineSymbol.STYLE_SOLID,
+        new Color([125, 250, 125, 0.75]),
+        4
+      );
+      this.selectionSymbol = new SimpleLineSymbol(
+        SimpleLineSymbol.STYLE_SOLID,
+        new Color([125, 125, 250, 0.75]),
+        6
+      );
+    },
+
     locationError: function(error) {
       if( navigator.geolocation ) {
-        navigator.geolocation.clearWatch(watchId);
+        navigator.geolocation.clearWatch(this.watchId);
       }
       switch (error.code) {
         case error.PERMISSION_DENIED:
@@ -236,7 +265,8 @@ define([
       }
     },
 
-    initButton: function() {
+    initButtons: function() {
+      // Route button setup
       domClass.remove(this.routeButton, "hidden");
       on(this.routeButton, "click", lang.hitch(this, function() {
         if(!this.loggedIn) {
@@ -256,6 +286,7 @@ define([
         }
       }));
 
+      // Login/logout button setup
       esriId.checkSignInStatus(oAuthInfo.portalUrl).then(lang.hitch(this, function(credential) {
         this.logIn(credential);
         domClass.remove(this.headerStatus, "hidden");
@@ -274,6 +305,14 @@ define([
           }
         }));
       }));
+
+      // Locate button setup
+      domClass.remove(this.locateButton, "hidden");
+      on(this.locateButton, "click", lang.hitch(this, this.showLocation));
+
+      // Select button setup
+      domClass.remove(this.selectButton, "hidden");
+      on(this.selectButton, "click", lang.hitch(this, this.toggleSelection));
     },
 
     logIn(credential) {
@@ -292,7 +331,60 @@ define([
       }
     },
 
+    refreshSegments: function() {
+      this.segmentsLoaded = false;
+
+      var normalizedMin = webMercatorUtils.xyToLngLat(this.map.extent.xmin, this.map.extent.ymin);
+      var normalizedMax = webMercatorUtils.xyToLngLat(this.map.extent.xmax, this.map.extent.ymax);
+      var segmentRequest = esriRequest({
+        url: "https://" + this.config.stravaDomain + "/api/v3/segments/explore",
+        content: {
+          bounds:
+            normalizedMin[1] + "," + normalizedMin[0] + "," +
+            normalizedMax[1] + "," + normalizedMax[0],
+          activity_type: "riding",
+          min_cat: 0,
+          max_cat: 5,
+          access_token: this.accessToken
+        },
+        handleAs: "json"
+      });
+
+      segmentRequest.then(lang.hitch(this, function(response) {
+        if(response.segments.length > 0) {
+          this.featureLayer.clear();
+          this.addFeatures = [];
+          this.addFeatures = this.addFeatures.concat(this.selectedFeatures);
+          response.segments.forEach(lang.hitch(this, function(segment) {
+            var attr = {};
+            attr["name"] = segment.name;
+            attr["id"] = segment.id;
+            attr["average_grade"] = segment.avg_grade;
+            attr["elevation_difference"] = segment.elev_difference;
+            attr["distance"] = segment.distance;
+            attr["start_lnglat"] = segment.start_latlng.reverse();
+            attr["end_lnglat"] = segment.end_latlng.reverse();
+            attr["visited"] = 0;
+            var lineGraphic = this.polyConverter.decodePoly_toGraphic(segment.points, this.segmentSymbol);
+            lineGraphic.setAttributes(attr);
+            var found = this.addFeatures.find(lang.hitch(this, function (graphic) {
+              return graphic.attributes.id === lineGraphic.attributes.id;
+            }));
+            if(!found) {
+              this.addFeatures.push(lineGraphic);
+            }
+          }));
+          this.featureLayer.applyEdits(this.addFeatures, null, null).then(lang.hitch(this, function(edits) {
+            this.segmentsLoaded = true;
+          }));
+        }
+      }), function(error) {
+        console.log(error);
+      });
+    },
+
     createMap: function(location) {
+      this.currentLocation = location;
       var pt = new Point(location.coords.longitude, location.coords.latitude);
       this.map = new Map("map", {
         basemap: "topo",
@@ -306,61 +398,14 @@ define([
         this.logInButton = query(".logInButton")[0];
         this.headerStatus = query(".header .status")[0];
         this.userText = query(".status .userText")[0];
-        this.initButton();
+        this.locateButton = query("#map .locate")[0];
+        this.selectButton = query(".selectButton")[0];
+        this.initButtons();
         this.initLayer();
         this.addGraphic(pt);
         domClass.add(this.loader, "hidden");
       }));
-      this.map.on("extent-change", lang.hitch(this, function() {
-        this.segmentsLoaded = false;
-
-        var normalizedMin = webMercatorUtils.xyToLngLat(this.map.extent.xmin, this.map.extent.ymin);
-        var normalizedMax = webMercatorUtils.xyToLngLat(this.map.extent.xmax, this.map.extent.ymax);
-        var segmentRequest = esriRequest({
-          url: "https://" + this.config.stravaDomain + "/api/v3/segments/explore",
-          content: {
-            bounds:
-              normalizedMin[1] + "," + normalizedMin[0] + "," +
-              normalizedMax[1] + "," + normalizedMax[0],
-            activity_type: "riding",
-            min_cat: 0,
-            max_cat: 5,
-            access_token: this.accessToken
-          },
-          handleAs: "json"
-        });
-
-        segmentRequest.then(lang.hitch(this, function(response) {
-          if(response.segments.length > 0) {
-            this.deleteFeatures = this.addFeatures;
-            this.addFeatures = [];
-            response.segments.forEach(lang.hitch(this, function(segment) {
-              var attr = {};
-              attr["name"] = segment.name;
-              attr["id"] = segment.id;
-              attr["average_grade"] = segment.avg_grade;
-              attr["elevation_difference"] = segment.elev_difference;
-              attr["distance"] = segment.distance;
-              attr["start_lnglat"] = segment.start_latlng.reverse();
-              attr["end_lnglat"] = segment.end_latlng.reverse();
-              attr["visited"] = 0;
-              var lineSymbol = new SimpleLineSymbol(
-                SimpleLineSymbol.STYLE_SOLID,
-                new Color([125, 250, 125, 0.75]),
-                4
-              );
-              var lineGraphic = this.polyConverter.decodePoly_toGraphic(segment.points, lineSymbol);
-              lineGraphic.setAttributes(attr);
-              this.addFeatures.push(lineGraphic);
-            }));
-            this.featureLayer.applyEdits(this.addFeatures, null, this.deleteFeatures).then(lang.hitch(this, function(edits) {
-              this.segmentsLoaded = true;
-            }));
-          }
-        }), function(error) {
-          console.log(error);
-        });
-      }));
+      this.map.on("extent-change", lang.hitch(this, this.refreshSegments));
     },
 
     routeMe_OG: function() {
@@ -375,16 +420,34 @@ define([
       domClass.remove(this.loader, "hidden");
       this.routeParams = new RouteParameters();
       this.routeParams.stops = new FeatureSet();
-      this.featureLayer.graphics.forEach(lang.hitch(this, function(lineGraphic) {
+
+      var graphicsToRoute = this.featureLayer.graphics;
+      if(this.selecting) {
+        graphicsToRoute = this.selectedFeatures;
+      }
+
+      var featureCount = graphicsToRoute.length;
+      var counter = 0;
+      var startAndEnd = new Point(this.currentLocation.coords.longitude,
+        this.currentLocation.coords.latitude);
+      graphicsToRoute.forEach(lang.hitch(this, function(lineGraphic) {
+        if(counter === 0) {
+          this.routeParams.stops.features.push(new Graphic(startAndEnd));
+        }
+
         var i;
         for(i=0; i<lineGraphic.geometry.paths.length; i++) {
           var path = lineGraphic.geometry.paths[i];
           var j;
           for(j=0; j<path.length; j++) {
             this.routeParams.stops.features.push(new Graphic(
-              lineGraphic.geometry.getPoint(i, j)),
-            );
+              lineGraphic.geometry.getPoint(i, j)
+            ));
           }
+        }
+
+        if(++counter === featureCount) {
+          this.routeParams.stops.features.push(new Graphic(startAndEnd));
         }
       }));
       this.routeParams.returnRoutes = true;
@@ -393,9 +456,9 @@ define([
       this.routeParams.outSpatialReference = this.map.spatialReference;
       this.routeParams.ignoreInvalidLocations = true;
       this.routeParams.restrictUTurns = "NO_BACKTRACK";
-      this.routeParams.findBestSequence = true;
-      this.routeParams.preserveFirstStop = false;
-      this.routeParams.preserveLastStop = false;
+      this.routeParams.findBestSequence = false;
+      this.routeParams.preserveFirstStop = true;
+      this.routeParams.preserveLastStop = true;
       this.routeParams.returnStops = true;
 
       this.routeTask = new RouteTask(this.config.routeService);
@@ -411,7 +474,8 @@ define([
         domClass.add(this.loader, "hidden");
       }), lang.hitch(this, function(error) {
         clearTimeout(this.popoverTimeout);
-        $('[data-toggle="popover"]').attr('data-content', this.config.routeError)
+        $('[data-toggle="popover"]').attr('data-content',
+        this.selecting ? this.config.routeErrorSelect : this.config.routeError)
         $('[data-toggle="popover"]').popover("show");
         domClass.add(this.loader, "hidden");
         this.popoverTimeout = setTimeout(function() {
@@ -420,14 +484,36 @@ define([
       }));
     },
 
-    showLocation: function(location) {
-      var pt = new Point(location.coords.longitude, location.coords.latitude);
+    updateLocation: function(location) {
+      this.currentLocation = location;
+    },
+
+    showLocation: function() {
+      var pt = new Point(this.currentLocation.coords.longitude,
+        this.currentLocation.coords.latitude);
       if(!this.graphic) {
         lang.hitch(this, this.addGraphic(pt));
       }else { // move the graphic if it already exists
         this.graphic.setGeometry(pt);
       }
       this.map.centerAt(pt);
+    },
+
+    toggleSelection: function() {
+      this.selecting = !this.selecting;
+      if(this.selecting) {
+        domClass.add(this.selectButton, "selecting");
+        this.selectButton.style.background = "#AA0000";
+        this.selectButton.style["border-color"] = "#550000";
+        this.routeButton.innerHTML = this.config.routeSelect;
+      }else {
+        domClass.remove(this.selectButton, "selecting");
+        this.selectButton.style.background = "#00AA00";
+        this.selectButton.style["border-color"] = "#005500";
+        this.routeButton.innerHTML = this.config.routeNoSelect;
+        this.selectedFeatures = [];
+        this.refreshSegments();
+      }
     },
 
     addGraphic: function(pt) {

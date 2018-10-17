@@ -32,6 +32,12 @@
 	width: 100px;
 }
 
+.icon-label{
+	color: white;
+	text-align: center;
+	width: 100%;
+}
+
 .container{
 	position: relative;
 	top: 50px;
