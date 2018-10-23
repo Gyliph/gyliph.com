@@ -15,6 +15,7 @@
 <body>
   <div class="jumbotron-fluid text-center">
     <h1 class="header">
+      <input type="image" class="btn homeButton hidden" src="images/home_green.png"/>
       Route Me
       <div class="status hidden">
         <h class="userText"></h>
@@ -23,18 +24,24 @@
     </h1>
   </div>
 
-  <div class="container">
+  <div class="container mapContainer">
     <div id="map">
-      <img src="images/locate_icon.png" class="locate hidden" alt="Locate">
+      <img src="images/locate_icon.png" class="locate btn btn-primary hidden" alt="Locate">
     </div>
-    <button type="button" class="btn btn-primary routeButton hidden"
-    data-toggle="popover" title="Route Error" data-placement="top" data-trigger="manual"
-    data-content="">
-      route based on segments in view
-    </button>
-    <button type="button" class="btn btn-primary selectButton hidden">
-      add segments to route
-    </button>
+    <div class="buttonContainer">
+      <button type="button" class="btn btn-primary routeButton hidden"
+      data-toggle="popover" title="Route Error" data-placement="top" data-trigger="manual"
+      data-content="">
+        route based on segments in view
+      </button>
+      <button type="button" class="btn btn-primary selectButton hidden">
+        add segments to route
+      </button>
+    </div>
+  </div>
+
+  <div class="signature">
+    Site owned, created, and maintained by Jeff King
   </div>
 
   <div class="loader"></div>

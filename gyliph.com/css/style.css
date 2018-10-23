@@ -7,7 +7,28 @@
 
 .jumbotron-fluid{
 	background-color: rgb(225, 225, 225);
-	height: 10%;
+	height: 60px;
+}
+
+.grid{
+	position: relative;
+	top: 5%;
+	height: 30%;
+	overflow: auto;
+}
+
+.blog{
+	position: relative;
+	top: 10%;
+	height: 40%;
+	overflow: auto;
+}
+
+.signature{
+	color: rgb(150, 150, 150);
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
 }
 
 .app-icon{
@@ -20,7 +41,12 @@
 	width: 100%;
 }
 
-.app-icon:hover {
+.col-md-3 .disabled:hover {
+	background-color: rgb(225, 175, 175);
+	cursor: not-allowed;
+}
+
+.col-md-3 .enabled:hover {
 	background-color: rgb(175, 225, 175);
 	cursor: pointer;
 }
@@ -36,13 +62,26 @@
 	color: white;
 	text-align: center;
 	width: 100%;
+	font-weight: bold;
 }
 
-.container{
+.blog .list-group .list-group-item{
+	background-color: rgb(225, 225, 225);
+	font-weight: bold;
+}
+
+.blog .list-group .list-group-item:hover{
+	cursor: pointer;
+}
+
+.collapse .card, .collapsing .card{
 	position: relative;
-	top: 50px;
+	margin-top: 10px;
+	font-weight: normal;
 }
 
-body{
-	background-color: rgb(50, 50, 50)
+html, body{
+	background-color: rgb(50, 50, 50);
+	height: 100%;
+	width: 100%;
 }

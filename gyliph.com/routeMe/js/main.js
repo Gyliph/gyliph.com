@@ -51,6 +51,7 @@ define([
     popoverTimeout: null,
 
     loader: null,
+    homeButton: null,
     routeButton: null,
     logInButton: null,
     locateButton: null,
@@ -313,6 +314,10 @@ define([
       // Select button setup
       domClass.remove(this.selectButton, "hidden");
       on(this.selectButton, "click", lang.hitch(this, this.toggleSelection));
+
+      // Home button setup
+      domClass.remove(this.homeButton, "hidden");
+      on(this.homeButton, "click", function() { window.location.href=".." });
     },
 
     logIn(credential) {
@@ -394,6 +399,7 @@ define([
       });
       this.map.on("load", lang.hitch(this, function() {
         this.loader = query(".loader")[0];
+        this.homeButton = query(".homeButton")[0];
         this.routeButton = query(".routeButton")[0];
         this.logInButton = query(".logInButton")[0];
         this.headerStatus = query(".header .status")[0];

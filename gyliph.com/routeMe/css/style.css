@@ -7,7 +7,7 @@
 
 .jumbotron-fluid{
 	background-color: rgb(225, 225, 225);
-	height: 10%;
+	height: 60px;
 }
 
 .container{
@@ -16,8 +16,13 @@
 	text-align: center;
 }
 
+.mapContainer{
+	position: relative;
+	height: 70%;
+}
+
 .map{
-	height: 80vh;
+	height: 100%;
 	position: relative;
 }
 
@@ -35,12 +40,12 @@
 	border-color: #005500;
 }
 
-.selectButton.selecting:hover{
+.buttonContainer .selecting:hover{
 	background: #CC0000 !important;
 	border-color: #550000 !important;
 }
 
-.selectButton.selecting.focus, .selectButton.selecting:focus {
+.buttonContainer .selecting:focus {
     box-shadow: 0 0 0 0.2rem rgba(100,0,0,.5) !important;
 }
 
@@ -49,7 +54,7 @@
 	border-color: #005500 !important;
 }
 
-.selectButton.focus, .selectButton:focus {
+.selectButton:focus {
     box-shadow: 0 0 0 0.2rem rgba(0,100,0,.5) !important;
 }
 
@@ -65,19 +70,34 @@
 
 #map .locate{
 	position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 15px;
+  right: 15px;
   z-index: 1;
 	width: 50px;
-	height: 50px;
+	height: 40px;
 }
 
 .logInButton{
 	position: relative;
 }
 
+.homeButton{
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 56px;
+	width: 65px;
+}
+
 .hidden{
 	display: none;
+}
+
+.signature{
+	color: rgb(150, 150, 150);
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
 }
 
 .loader{
@@ -99,6 +119,8 @@
     100% { transform: rotate(360deg); }
 }
 
-body{
-	background-color: rgb(50, 50, 50)
+html, body{
+	background-color: rgb(50, 50, 50);
+	height: 100%;
+	width: 100%;
 }
