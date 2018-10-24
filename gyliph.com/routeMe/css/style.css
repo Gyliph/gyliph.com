@@ -11,14 +11,14 @@
 }
 
 .container{
-	margin-top: 2%;
+	margin-top: 40px;
 	position: relative;
 	text-align: center;
 }
 
 .mapContainer{
 	position: relative;
-	height: 70%;
+	height: 65%;
 }
 
 .map{
@@ -66,6 +66,13 @@
 	text-shadow: none;
 	color: rgb(0, 0, 0);
 	word-spacing: 10px;
+	height: 200%;
+}
+
+.userText{
+	margin-top: 55px;
+	position: relative;
+	color: rgb(150, 150, 150);
 }
 
 #map .locate{
@@ -79,6 +86,7 @@
 
 .logInButton{
 	position: relative;
+	float: right;
 }
 
 .homeButton{
