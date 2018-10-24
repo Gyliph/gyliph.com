@@ -5,7 +5,6 @@
   <script>
     function loadHandler() {
       if (opener) {
-        //opener.console.log("oauth callback href:", location.href);
         if (location.hash) {
           opener.require("esri/kernel").id.setOAuthResponseHash(location.hash);
           close();
