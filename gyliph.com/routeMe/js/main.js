@@ -30,15 +30,17 @@ define([
   'dojo/query',
   'application/googlePolyConverter',
   'dojo/on',
+  'dojo/dom',
   'dojo/dom-class',
   'dojo/Deferred',
+  'dijit/form/Button',
   'dojo/domReady!'
 ], function (
   declare, kernel, lang, ioQuery, esriConfig, Map, Point, Polyline, SimpleMarkerSymbol,
   SimpleLineSymbol, Graphic, Color, webMercatorUtils, esriRequest, PopupTemplate,
   FeatureLayer, LabelClass, TextSymbol, Font, RouteParameters, RouteTask, Query, Units,
   FeatureSet, arcgisPortal, OAuthInfo, esriId, registry, query,
-  GooglePolyConverter, on, domClass, Deferred) {
+  GooglePolyConverter, on, dom, domClass, Button, Deferred) {
   return declare([], {
     map: null,
     watchId: 0,
@@ -54,7 +56,7 @@ define([
     routeButton: null,
     logInButton: null,
     locateButton: null,
-    selectButton: null,
+    clearSelectButton: null,
 
     currentLocation: null,
 
@@ -191,29 +193,35 @@ define([
     initLayer: function () {
       this.setSymbols()
       this.popupTemplate = new PopupTemplate({
-        title: '{' + this.config.labelField + '}',
-        fieldInfos: [
-          { fieldName: 'name', visible: true },
-          { fieldName: 'id', visible: true },
-          { fieldName: 'distance', visible: true },
-          { fieldName: 'elevation_difference', visible: true },
-          { fieldName: 'average_grade', visible: true },
-          { fieldName: 'start_lnglat', visible: true },
-          { fieldName: 'end_lnglat', visible: true },
-          { fieldName: 'visited', visible: false }
-        ]
+        title: '{' + this.config.labelField + '}'
       })
+      this.popupTemplate.setContent(getPopupContent)
       this.featureLayer = new FeatureLayer(this.featureCollection, {
         id: 'segmentLayer',
         infoTemplate: this.popupTemplate
       })
-      this.featureLayer.on('click', lang.hitch(this, function (evt) {
-        this.map.infoWindow.setFeatures([evt.graphic])
-        if (this.selecting) {
-          this.selectedFeatures.push(evt.graphic)
-          evt.graphic.setSymbol(this.selectionSymbol)
-        }
+
+      on(this.map.infoWindow, 'SelectionChange', lang.hitch(this, function () {
+        query('.addToSelection').on('click', lang.hitch(this, function (evt) {
+          var index = this.map.infoWindow.selectedIndex
+          var feat = this.map.infoWindow.features[index]
+          feat.setSymbol(this.selectionSymbol)
+          this.selectedFeatures.push(feat)
+          this.routeButton.innerHTML = this.config.routeSelect
+          domClass.remove(this.clearSelectButton, 'hidden')
+        }))
       }))
+
+      function getPopupContent (graphic) {
+        var popupContent = '<b>Name:</b> ' + graphic.attributes.name +
+          '<br><b>ID:</b> ' + graphic.attributes.id +
+          '<br><b>Distance:</b> ' + graphic.attributes.distance +
+          '<br><b>Elevation difference:</b> ' + graphic.attributes.elevation_difference +
+          '<br><b>Average grade:</b> ' + graphic.attributes.average_grade +
+          '<br><br><a href="#" data-dojo-type="dijit/form/button" class="addToSelection">Add to route selection</a>'
+
+        return popupContent
+      }
 
       this.featureLayer.showLabels = true
       var layerLabel = new TextSymbol().setColor(new Color([0, 0, 0, 1.0]))
@@ -312,8 +320,7 @@ define([
       on(this.locateButton, 'click', lang.hitch(this, this.showLocation))
 
       // Select button setup
-      domClass.remove(this.selectButton, 'hidden')
-      on(this.selectButton, 'click', lang.hitch(this, this.toggleSelection))
+      on(this.clearSelectButton, 'click', lang.hitch(this, this.clearSelection))
 
       // Home button setup
       domClass.remove(this.homeButton, 'hidden')
@@ -405,7 +412,7 @@ define([
         this.headerStatus = query('.header .status')[0]
         this.userText = query('.status .userText')[0]
         this.locateButton = query('#map .locate')[0]
-        this.selectButton = query('.selectButton')[0]
+        this.clearSelectButton = query('.clearSelectButton')[0]
         this.initButtons()
         this.initLayer()
         this.addGraphic(pt)
@@ -428,7 +435,7 @@ define([
       this.routeParams.stops = new FeatureSet()
 
       var graphicsToRoute = this.featureLayer.graphics
-      if (this.selecting) {
+      if (this.selectedFeatures.length > 0) {
         graphicsToRoute = this.selectedFeatures
       }
 
@@ -482,7 +489,7 @@ define([
         console.log(error)
         clearTimeout(this.popoverTimeout)
         $('[data-toggle="popover"]').attr('data-content',
-          this.selecting ? this.config.routeErrorSelect : this.config.routeError)
+          (this.selectedFeatures.length > 0) ? this.config.routeErrorSelect : this.config.routeError)
         $('[data-toggle="popover"]').popover('show')
         domClass.add(this.loader, 'hidden')
         this.popoverTimeout = setTimeout(function () {
@@ -506,21 +513,11 @@ define([
       this.map.centerAt(pt)
     },
 
-    toggleSelection: function () {
-      this.selecting = !this.selecting
-      if (this.selecting) {
-        domClass.add(this.selectButton, 'selecting')
-        this.selectButton.style.background = '#AA0000'
-        this.selectButton.style['border-color'] = '#550000'
-        this.routeButton.innerHTML = this.config.routeSelect
-      } else {
-        domClass.remove(this.selectButton, 'selecting')
-        this.selectButton.style.background = '#00AA00'
-        this.selectButton.style['border-color'] = '#005500'
-        this.routeButton.innerHTML = this.config.routeNoSelect
-        this.selectedFeatures = []
-        this.refreshSegments()
-      }
+    clearSelection: function () {
+      domClass.add(this.clearSelectButton, 'hidden')
+      this.routeButton.innerHTML = this.config.routeNoSelect
+      this.selectedFeatures = []
+      this.refreshSegments()
     },
 
     addGraphic: function (pt) {
