@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Gyliph</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="jumbotron-fluid text-center">
+  <h1 class="header">Gyliph</h1>
+</div>
+
+<div id="grid-container" class="container grid">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="app-icon enabled" onclick="location.href='routeMe/';">
+        <img src="images/fixie.png" alt="routeMe"/>
+      </div>
+      <label class="icon-label">Route Me</label>
+    </div>
+    <div class="col-md-3">
+      <div class="app-icon disabled">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="app-icon disabled">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="app-icon disabled">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="blog-container" class="container blog">
+  <ul class="list-group">
+    <li class="list-group-item item-0" data-toggle="collapse" href="#collapse-item-0">
+      My first blog post
+      <div class="collapse" id="collapse-item-0">
+        <div class="card card-body">
+          This is my first blog post on my website. Expect many more to come. I intend to
+          focus my posts on GIS, programming, and all things techy.
+        </div>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="signature">
+  Site owned, created, and maintained by Jeff King
+</div>
+
+</body>
+</html>

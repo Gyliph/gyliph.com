@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Route Me</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+</head>
+<body>
+  <div class="jumbotron-fluid text-center">
+    <h1 class="header">
+      <input type="image" class="btn homeButton hidden" src="images/home_green.png"/>
+      Route Me
+      <div class="status hidden">
+        <h>
+          <button type="button" class="btn btn-primary logInButton">log in</button>
+        </h>
+        <p class="userText"></p>
+      </div>
+    </h1>
+  </div>
+
+  <div class="container mapContainer">
+    <div id="map">
+      <img src="images/locate_icon.png" class="locate btn btn-primary hidden" alt="Locate">
+    </div>
+    <div class="buttonContainer">
+      <button type="button" class="btn btn-primary routeButton hidden"
+      data-toggle="popover" title="Route Error" data-placement="top" data-trigger="manual"
+      data-content="">
+        route based on segments in view
+      </button>
+      <button type="button" class="btn btn-primary clearSelectButton hidden">
+        clear selected segments
+      </button>
+    </div>
+  </div>
+
+  <div class="signature">
+    Site owned, created, and maintained by Jeff King
+  </div>
+
+  <div class="loader"></div>
+
+  <script type="text/javascript">
+      var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+      var dojoConfig = {
+          async: true,
+          // The locationPath logic below may look confusing but all its doing is
+          // enabling us to load the api from a CDN and load local modules from the correct location.
+          packages: [{
+              name: "application",
+              location: package_path + '/js'
+          }, {
+              name: "config",
+              location: package_path + '/config'
+          }]
+      };
+      // Have to handle a locale parameter before dojo is loaded
+      if (location.search.match(/locale=([\w-]+)/)) {
+        dojoConfig.locale = RegExp.$1;
+      }
+  </script>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/3.25/esri/css/esri.css">
+  <script src="https://js.arcgis.com/3.25/"></script>
+
+  <script type="text/javascript">
+      require(["config/config", "application/main"], function (config, Main) {
+          var myApp = new Main();
+          myApp.startup(config)
+      });
+  </script>
+</body>
+
+</html>
