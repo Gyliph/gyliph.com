@@ -1,0 +1,1 @@
+aws s3 sync "%CD%\dist" "s3://test-gyliph.com"

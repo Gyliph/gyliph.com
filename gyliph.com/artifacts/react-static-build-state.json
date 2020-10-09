@@ -1,0 +1,65 @@
+{
+  "prefetchRate": 5,
+  "maxThreads": null,
+  "disableRoutePrefixing": false,
+  "outputFileRate": 100,
+  "extensions": [
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx"
+  ],
+  "minLoadTime": 200,
+  "disablePreload": false,
+  "disableRuntime": false,
+  "preloadPollInterval": 300,
+  "productionSourceMaps": false,
+  "silent": false,
+  "entry": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\src\\index.tsx",
+  "plugins": [
+    "react-static-plugin-typescript",
+    [
+      "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\node_modules\\react-static-plugin-source-filesystem\\node.api.js",
+      {
+        "location": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\src\\pages"
+      }
+    ],
+    "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\node_modules\\react-static-plugin-reach-router\\browser.api.js",
+    "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\node_modules\\react-static-plugin-sitemap\\dist\\node.api.js",
+    "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com"
+  ],
+  "paths": {
+    "ROOT": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com",
+    "SRC": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\src",
+    "DIST": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\dist",
+    "ASSETS": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\dist",
+    "PLUGINS": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\plugins",
+    "TEMP": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\tmp",
+    "ARTIFACTS": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\artifacts",
+    "PUBLIC": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\public",
+    "NODE_MODULES": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\node_modules",
+    "EXCLUDE_MODULES": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\node_modules",
+    "PACKAGE": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\package.json",
+    "HTML_TEMPLATE": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\dist\\index.html",
+    "STATIC_DATA": "C:\\Users\\jmuki\\OneDrive\\Professional\\Code Workspace\\git\\gyliph.com\\gyliph.com\\gyliph.com\\dist\\staticData"
+  },
+  "siteRoot": "/",
+  "basePath": "",
+  "publicPath": "/",
+  "assetsPath": "",
+  "extractCssChunks": false,
+  "inlineCss": false,
+  "babelExcludes": [],
+  "devServer": {
+    "host": "localhost",
+    "port": 3000
+  },
+  "terser": {
+    "terserOptions": {
+      "mangle": {},
+      "parse": {},
+      "compress": {},
+      "output": {}
+    }
+  }
+}
